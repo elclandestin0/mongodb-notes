@@ -96,7 +96,7 @@ List of GeoJSON object types:
 
 Example GeoJSON Object: `{name: "My home", location: { type: "Point", coordinates: [-73.345234, 43.3456]}}`
 ### GeoQueries
-One operator that comes to mind with regards to GeoQueries is the `$near` & the `$geometry` operator. `$maxDistance` & `$minDistance` also help with the query (in meters). Here is an example query: `db.places.find({location: {$near: {$geometry: {type: "Point", coordinates: [-73, 43]}, $maxDistance: 30, $minDistance: 10}}})`. It is important to note that we must create an index in the collection `places` before querying correctly: `db.places.createIndex({location: "2dsphere"})`
+One operator that comes to mind with regards to GeoQueries is the `$near ` & the `$geometry` operator. `$maxDistance` & `$minDistance` also help with the query (in meters). Here is an example query: `db.places.find({location: {$near: {$geometry: {type: "Point", coordinates: [-73, 43]}, $maxDistance: 30, $minDistance: 10}}})`. It is important to note that we must create an index in the collection `places` before querying correctly: `db.places.createIndex({location: "2dsphere"})`
 
 #### Finding places in a certain area
 - `$geoWithin`: is an operator provided by mongoDB that allows us to query within a polygon.
@@ -106,8 +106,17 @@ When we query within a certain area, we must use the `$geoWithin` operator. The 
 
 #### Finding users in a certain area
 - `$geoIntersects`: returns all points that intersect within a given area
-- `$centerSphere`:
+- `$centerSphere`: creates a sphere from coordinates with a specified radius to find points in the sphere.
 `db.areas.find({$geoIntersects: {$geometry: {type: "Point", coordinates: [lng, lat]}}})`
+
+## SSL Transport Encryption
+- Run the following command: `openssl req -newkey rsa:2048 -new -x509 -days 365 -nodes -out mongodb-cert.crt -keyout mongodb-cert.key`
+- Add requested data
+- When the shell asks you for `Common Name (e.g. server FQDN or YOUR name) []:` make sure to either add `localhost` if working locally OR the address of the webserver you are working on.
+- Concatenate the generated key file with the certificate file by running the command `cat mongodb-cert.key mongodb-cert.crt > mongodb.pem` (on Mac or Linux) or `type mongodb-cert.key mongodb-cert.crt > mongodb.pem`
+- Start a mongo server with SSL arguments: `mongod --tlsMode requireTLS --tlsCertKeyFile C:\Program Files\OpenSSL-Win64\bin\mongod.pem` 
+- Start a new shell instance and connect to the mongo server: `mongo --ssl --sslCAFile mongodb.pem --host localhost`
+
 
 
 # Schema Validation
