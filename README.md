@@ -117,7 +117,8 @@ When we query within a certain area, we must use the `$geoWithin` operator. The 
 - Start a mongo server with SSL arguments: `mongod --tlsMode requireTLS --tlsCertKeyFile C:\Program Files\OpenSSL-Win64\bin\mongod.pem` 
 - Start a new shell instance and connect to the mongo server: `mongo --ssl --sslCAFile mongodb.pem --host localhost`
 
-
+## Creating Indexes
+Indexes are use to traverse a large data set more efficiently. As the documents in your collection(s) grow, it is wise to use an index to traverse the data-set quicker. However, there is a performance cost of inserting your documents when using an index (once in the collection and one or more times for multiple indices). 
 
 # Schema Validation
 Check `validation.js` for in-depth information regarding basic schema validation.
