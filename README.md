@@ -118,7 +118,8 @@ When we query within a certain area, we must use the `$geoWithin` operator. The 
 - Start a new shell instance and connect to the mongo server: `mongo --ssl --sslCAFile mongodb.pem --host localhost`
 
 ## Indexes
-Index Scan (IXSCAN) typically beats the Collection Scan (COLLSCAN). # of keys in index examined should be as close as possible to # of documents examined. Simultaneously, # of documents examined should be as close as possible to # of documents returned.
+Indexes allow you to retrieve data much more quicker and efficiently if used correctly, because your queries will only have to look at a subset of documents. 
+Index Scan (IXSCAN) typically beats the Collection Scan (COLLSCAN). # of keys in index examined should be as close as possible to # of documents examined. Simultaneously, # of documents examined should be as close as possible to # of documents returned. 
 ### Creating Indexes
 Indexes are use to traverse a large data set more efficiently. As the documents in your collection(s) grow, it is wise to use an index to traverse the data-set quicker. However, there is a performance cost of inserting your documents when using an index (once in the collection and one or more times for multiple indices). To add an index, follow this command: `db.<collection-name>.createIndex({<attribute-name>: <one-or-negative-one>})`. An example would be: `db.contacts.createIndex({"dateOfBirth.age": 1})`. This translates to: create an index on the contacts collection for the attribute `age` on the embedded document `dateOfBirth` for an ascending order of indices.
 
