@@ -150,9 +150,19 @@ This will create an Index that only works on an attribute of type `Date`. It's g
 
 - As your collections get bigger with many documents, it's wise to create indexes in the background. This will stop your collection from locking down due to the slow process and still allow your application (or shell) to continue running. To do this, add this command: `{background: true}` in the command: `db.ratings.createIndex({age: 1}, {background: true})`.
 
-
 ### Compounding Index
 You can add 2 different keys when creating an index. This will create a compounded index. For example: `db.contacts.createIndex({"dob.age": 1, gender: 1})`, this will create and store values in the index with age and gender in ascending order. 30 male, 30 male, 30 female, 31 male, and so on. Now when you run a query of either `dob.age` (without `gender`) it will use the same compound index for `dob.age`& `gender`. However, running a query on `gender` alone won't work as it can't look into the second value of a compounded indice alone.
+
+## Aggregation
+Aggregation works in pipeline functions. When we begin the `aggregate()` function, it's main arguments are stored in a pipeline array. The order matters here, as each value that gets returned from the previous pipeline is passed into the next pipeline. For instance, check the following argument: `db.persons.aggregate([{$match: <document>}, {$group: <document>}, {$sort: <document>}])`
+- `$match` is evaluated first (let's say by matching the `{gender: "female"}`)
+- `$group`: the value from `$match` is passed into `$group` to be evaluuated further. Let's say we group all towns together and count the females. We also can create a new variable .. like `totalPeople`.
+- `$sort`: given that we created a new variable from the previous pipeline, we can use `totalPeople` and sort it from descending to ascending. 
+The result is we get all females, then we count how many each female lives in a town, afterwards we sort the towns with the highest females to lowest (or vice-versa)
+
+Antoher example of an operator, `$project` (must use), returns back only the attributes you want to see from a collection by assigning each attribute a value of `0` or `1`. Example: `db.contacts.aggregate([{$project: {_id: 0, gender: 1, fullName: {$concat: ["$name.first", " ", "$name.last"]}}}])`.
+
+[Click here to read about more Operators](https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline/)  
 
 # Schema Validation
 Check `validation.js` for in-depth information regarding basic schema validation.
