@@ -117,8 +117,41 @@ When we query within a certain area, we must use the `$geoWithin` operator. The 
 - Start a mongo server with SSL arguments: `mongod --tlsMode requireTLS --tlsCertKeyFile C:\Program Files\OpenSSL-Win64\bin\mongod.pem` 
 - Start a new shell instance and connect to the mongo server: `mongo --ssl --sslCAFile mongodb.pem --host localhost`
 
-## Creating Indexes
-Indexes are use to traverse a large data set more efficiently. As the documents in your collection(s) grow, it is wise to use an index to traverse the data-set quicker. However, there is a performance cost of inserting your documents when using an index (once in the collection and one or more times for multiple indices). 
+## Indexes
+Index Scan (IXSCAN) typically beats the Collection Scan (COLLSCAN). # of keys in index examined should be as close as possible to # of documents examined. Simultaneously, # of documents examined should be as close as possible to # of documents returned.
+### Creating Indexes
+Indexes are use to traverse a large data set more efficiently. As the documents in your collection(s) grow, it is wise to use an index to traverse the data-set quicker. However, there is a performance cost of inserting your documents when using an index (once in the collection and one or more times for multiple indices). To add an index, follow this command: `db.<collection-name>.createIndex({<attribute-name>: <one-or-negative-one>})`. An example would be: `db.contacts.createIndex({"dateOfBirth.age": 1})`. This translates to: create an index on the contacts collection for the attribute `age` on the embedded document `dateOfBirth` for an ascending order of indices.
+
+After you add the index, it is wise to test the query time before or after. To do this: run the following command `db.contacts.explain("executionStats").find({"dateOfBirth.age": {$gt: 60}})`. Which translates to: give me the stats on finding the `age` greater than 60 of every document in this `contacts` collecton. 
+
+### Getting Indexes
+`db.<collection-name>.getIndexes()` returns all the indexes in a collection
+
+### Partial Indexes
+An example of partial indexing is to create an index that only allows unique e-mails, but allows null values for e-mails (some users don't want to sign up with their e-mails.. but for the ones that do they need to have unique e-mails).
+`db.contacts.createIndex({email: 1}, {unqiue: true, partialFilterExpression: {email: {$exists: true}})`.
+
+#### Time To Live
+`db.sessions.createIndex({createdAt: 1}, {expireAfterSeconds: 10})`
+This will create an Index that only works on an attribute of type `Date`. It's good for clearing session data, cart, showing a photo for 24 hours .. etc.
+
+### Text Index
+- `db.products.createIndex({description: "text"})`: this command stores all the keywords found in the `description` attribute. You can only have ONE text index per collection. You can, however, chain multiple fields together in a text index: `db.products.createIndex({title: "text", description: "text"})`
+
+- To find the text index, simply run the command: `db.products.find({$text: {$search: "fantastic"}})`. You can also exclude words by adding a `-` infront of the word you want to exclude: `db.products.find({$text: {$search: "fantastic -book"}})`.
+
+- You can specify the language when creating a text index by adding this document `{default_language: "english"}` in the second argument of `createIndex()`.
+
+- Adding weights when creating a text index can be very powerful, especially when you are adding multiple attributes to one text index. This tells MongoDB which attribute has more priority: `db.products.createIndex({title: "text", description: "text"}, {weights:{title: 5, description: 10}})`.
+ 
+
+- You can find the score of confidence by mongoDB when querying for a text by running the following command: `db.products.find({$text: {$search: "fantastic"}}, {score: {$meta: "textScore"}}).pretty()`.
+
+- As your collections get bigger with many documents, it's wise to create indexes in the background. This will stop your collection from locking down due to the slow process and still allow your application (or shell) to continue running. To do this, add this command: `{background: true}` in the command: `db.ratings.createIndex({age: 1}, {background: true})`.
+
+
+### Compounding Index
+You can add 2 different keys when creating an index. This will create a compounded index. For example: `db.contacts.createIndex({"dob.age": 1, gender: 1})`, this will create and store values in the index with age and gender in ascending order. 30 male, 30 male, 30 female, 31 male, and so on. Now when you run a query of either `dob.age` (without `gender`) it will use the same compound index for `dob.age`& `gender`. However, running a query on `gender` alone won't work as it can't look into the second value of a compounded indice alone.
 
 # Schema Validation
 Check `validation.js` for in-depth information regarding basic schema validation.
