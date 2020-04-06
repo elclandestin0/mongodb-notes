@@ -155,12 +155,46 @@ You can add 2 different keys when creating an index. This will create a compound
 
 ## Aggregation
 Aggregation works in pipeline functions. When we begin the `aggregate()` function, it's main arguments are stored in a pipeline array. The order matters here, as each value that gets returned from the previous pipeline is passed into the next pipeline. For instance, check the following argument: `db.persons.aggregate([{$match: <document>}, {$group: <document>}, {$sort: <document>}])`
-- `$match` is evaluated first (let's say by matching the `{gender: "female"}`)
-- `$group`: the value from `$match` is passed into `$group` to be evaluuated further. Let's say we group all towns together and count the females. We also can create a new variable .. like `totalPeople`.
+- `$match`: is evaluated first (let's say by matching the `{gender: "female"}`)
+- `$project`: Include/exclude/transform fields.
+- `$group`: the value from `$match` is passed into `$group` to be evaluuated further. Let's say we group all towns together and count the females. We also can create a new variable .. like `totalPeople`. It's used to to sum, count, average or build an array.
 - `$sort`: given that we created a new variable from the previous pipeline, we can use `totalPeople` and sort it from descending to ascending. 
 The result is we get all females, then we count how many each female lives in a town, afterwards we sort the towns with the highest females to lowest (or vice-versa)
+- `$unwind`: Flattens an array by repeating documents. So if we `$unwind` the value of `hobbies` and it has 3 values, then that document will split into 3 documents.
+- `$addToSet`: adds unique values to an array.
+- `$convert`: converts from one type into another. First argument is `input` which is the document you'd like to convert. Second argument is the `to`, which specifies the type you want to convert the `input` to.
 
 Antoher example of an operator, `$project` (must use), returns back only the attributes you want to see from a collection by assigning each attribute a value of `0` or `1`. Example: `db.contacts.aggregate([{$project: {_id: 0, gender: 1, fullName: {$concat: ["$name.first", " ", "$name.last"]}}}])`.
+
+- `$bucket`: bucket categorizes a group of documents into a key. The keys that `$bucket` can take are `groupBy`, which asks for the key to place in the bucket. `boundaries` places the boundaries of values to categorize, read as (min, max) from left to right. `output` is the final key that creates our object to be categorized. 
+
+here is an example command:
+
+```javascript
+db.contacts.aggregate([
+  {
+    $bucket: {
+      groupBy: "$dob.age",
+      boundaries: [18, 30, 50, 80],
+      output: {
+        numPersons: { $sum: 1},
+        averageAge: { $avg: "$dob.age"},
+      }
+    }
+  }
+]).pretty();
+```
+This command groups the age of `contacts` collection, from the boundaries `[18, 30, 50, 80]`, and produces an output that gives us the number of people and their average. Sample output:
+
+```javascript
+{ "_id" : 18, "numPersons" : 868, "averageAge" : 25.101382488479263 }
+{ "_id" : 30, "numPersons" : 1828, "averageAge" : 39.4917943107221 }
+{ "_id" : 50, "numPersons" : 2303, "averageAge" : 61.46113764654798 }
+```
+
+We can also use `$bucketAuto`, which creates the automatically without the user specifying it. This command, arguably, is great for data analysts. 
+
+- `$out`: the `$out` operator is used to output into a new collection after appending at the end of the aggregation comamnd.
 
 [Click here to read about more Operators](https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline/)  
 
