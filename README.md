@@ -198,5 +198,50 @@ We can also use `$bucketAuto`, which creates the automatically without the user 
 
 [Click here to read about more Operators](https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline/)  
 
+## Numeric Data
+Numbers stored in the shell are stored as a 64 bit double, by default. This is just how javascript works.
+
+## Performance
+What influences performance?
+- Efficient Queries / Operations
+- Indexes 
+- Fitting data schema 
+
+### Capped Collections
+`db.createCollection("capped", {capped: true, size: 10000, max: 3})`
+- Max parameter is the maximum number of documents that can fit into this collection.
+
+## Transactions
+Sometimes a user wants to delete a document in one collection that is related to a document of another collection. This can work most of the time, but there are cases where a network outage or a server down can occur, so the user ends up deleting one document, but the related documents in other collections remain, which the user wouldn't like.
+
+A transaction can be wrapped with multiple commands, so that in-case a user let's say deletes a related document, if it fails then it rolls back. Here is an example chain of commands wrapped with a transcation in the shell:
+
+```javascript
+const session = db.getMongo().startSession()
+const postCollection = session.getDatabase("blog").posts
+const userCollection = session.getDatabase("blog").users
+userCollection.deleteOne({_id: ObjectId("random-hash-number")})
+postCollection.deleteMany({_id: ObjectId("random-hash-number")})
+session.commitTransaction()
+```
+For the above example, it would obviously be better if the `_id` was a `const` so that we can apply it to any scenario, but it is still a valid example. 
+
+## Stitch 
+Serverless platform for building applications. It is built around Atlas' cloud services. It also handles user authentication and execute code in the cloud (like AWS Lambda functions).
+
+### Initializing stitch in React
+```javascript
+// first we import Stitch
+import { Stitch, AnonymousCredential } from 'mongodb-stitch-browser-sdk';
+// next we initialize it in constructor() 
+const client = Stitch.initializeDefaultAppClient('stitch-app-name');
+// finally we create a const to use the app client 
+
+```
+
+
+
 # Schema Validation
 Check `validation.js` for in-depth information regarding basic schema validation.
+
+
